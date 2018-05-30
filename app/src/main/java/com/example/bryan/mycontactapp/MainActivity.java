@@ -1,6 +1,8 @@
 package com.example.bryan.mycontactapp;
 
+import android.content.Intent;
 import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,7 +10,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import com.example.bryan.mycontactapp.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
 
         StringBuffer sb = new StringBuffer();
         while(res.moveToNext()) {
-            // append res column 0,1,2,3 to buffer - see StringBuffer and Cursor API
-            // delimit each of the "appends" with line feed "\n"
             for (int i = 0; i < 4; i++) {
                 sb.append(res.getColumnName(i) + ": " + res.getString(i) + "\n");
             }
@@ -68,5 +67,38 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle(title);
         builder.setMessage(message);
         builder.show();
+    }
+
+    public static final String EXTRA_MESSAGE = "com.example.bryan.mycontactapp.MESSAGE";
+    public void searchRecord(View view) {
+        Log.d("MyContactApp", "MainActivity: launching SearchActivity");
+        Intent intent = new Intent(this, SearchActivity.class);
+        intent.putExtra(EXTRA_MESSAGE, getRecords());
+        startActivity(intent);
+    }
+
+    private String getRecords() {
+        Cursor res = myDb.getAllData();
+        Log.d("MyContactApp", "MainActivity: getRecords: received cursor");
+        StringBuffer sb = new StringBuffer();
+        int counter = 0;
+        while (res.moveToNext()) {
+            if (res.getString(1).equals(editName.getText().toString())) {
+                for (int i = 1; i < 4; i++) {
+                    sb.append(res.getColumnName(i) + ": " + res.getString(i) + "\n");
+                }
+                sb.append("\n");
+                counter++;
+            }
+        }
+
+        if (counter == 0) {
+            return "No entries found with the name '" + editName.getText().toString() + "'";
+        } else {
+            String name = editName.getText().toString();
+            if (name.equals("")) name = " ";
+            sb.insert(0, counter + " entries found with the name '" + name + "'\n\n");
+            return sb.toString();
+        }
     }
 }
